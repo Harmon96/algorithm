@@ -1,0 +1,229 @@
+package chap09;
+import java.util.Comparator;
+// ?—°ê²? ë¦¬ìŠ¤?Š¸ ?´?˜?Š¤  (ë°°ì—´ ì»¤ì„œ ë²„ì „)
+// ?•´?‹¹ ? •?‹µ ë©”ì„œ?“œ?Š” ?†Œ?Š¤ ì½”ë“œ?˜ ë§? ?•„?˜ìª½ì— ?ˆ?Šµ?‹ˆ?‹¤.
+
+public class AryLinkedListT_09_04<E> {
+	// ?…¸?“œ
+	class Node<E> {
+		private E data; // ?°?´?„°
+		private int next; // ë¦¬ìŠ¤?Š¸?˜ ?’¤ìª½í¬?¸?„°(?’¤ìª½ë…¸?“œ?˜ index)
+		private int dnext; // free ë¦¬ìŠ¤?Š¸?˜ ?’¤ìª½í¬?¸?„°(?’¤ìª½ë…¸?“œ?˜ index)
+
+		// data?? nextë¥? ?„¤? •
+		void set(E data, int next) {
+			this.data = data;
+			this.next = next;
+		}
+	}
+
+	private Node<E>[] n; // ë¦¬ìŠ¤?Š¸ ë³¸ì²´
+	private int size; // ë¦¬ìŠ¤?Š¸?˜ ?š©?Ÿ‰ (ìµœë? ?°?´?„° ?ˆ˜)
+	private int max; // ?‚¬?š©ì¤‘ì¸ ê¼¬ë¦¬ record
+	private int head; // ë¨¸ë¦¬ ?…¸?“œ
+	private int tail; // ê¼¬ë¦¬ ?…¸?“œ
+	private int crnt; // ?„ ?ƒ ?…¸?“œ
+	private int deleted; // free ë¦¬ìŠ¤?Š¸?˜ ë¨¸ë¦¬ ?…¸?“œ
+	private static final int NULL = -1; // ?’¤ìª½ë…¸?“œ?Š” ?—†?Šµ?‹ˆ?‹¤.
+
+	// ?ƒ?„±?
+	public AryLinkedListT_09_04(int capacity) {
+		head = tail = crnt = max = deleted = NULL;
+		try {
+			n = new Node[capacity];
+			for (int i = 0; i < capacity; i++)
+				n[i] = new Node<E>();
+			size = capacity;
+		} catch (OutOfMemoryError e) { // ë°°ì—´?˜ ?ƒ?„±?— ?‹¤?Œ¨
+			size = 0;
+		}
+	}
+
+	// ?‹¤?Œ?— ?‚½?…?•˜?Š” record?˜ indexë¥? êµ¬í•©?‹ˆ?‹¤.
+	private int getInsertIndex() {
+		if (deleted == NULL) { // ?‚­? œ?•  recordê°? ?—†?Œ.
+			if (max < size)
+				return ++max; // ?ƒˆ recordë¥? ?‚¬?š©
+			else
+				return NULL; // ?š©?Ÿ‰ over(?„˜ì¹?)
+		} else {
+			int rec = deleted; // free ë¦¬ìŠ¤?Š¸?—?„œ
+			deleted = n[rec].dnext; // ë¨¸ë¦¬recë¥? êº¼ëƒ„
+			return rec;
+		}
+	}
+
+	// record idxë¥? free ë¦¬ìŠ¤?Š¸?— ?“±ë¡?
+	private void deleteIndex(int idx) {
+		if (deleted == NULL) { // ?‚­? œ?•  recordê°? ?—†?Œ.
+			deleted = idx; // idxë¥? free ë¦¬ìŠ¤?Š¸?˜
+			n[idx].dnext = NULL; // ë¨¸ë¦¬?— ?“±ë¡?
+		} else {
+			int rec = deleted; // idxë¥? free ë¦¬ìŠ¤?Š¸?˜
+			deleted = idx; // ë¨¸ë¦¬?— ?‚½?…
+			n[idx].dnext = rec;
+		}
+	}
+
+	// ?…¸?“œë¥? ê²??ƒ‰
+	public E search(E o, Comparator<? super E> c) {
+		int ptr = head; // ?˜„?¬ ?Š¤ìº”ì¤‘?¸ ?…¸?“œ
+
+		while (ptr != NULL) {
+			if (c.compare(o, n[ptr].data) == 0) {
+				crnt = ptr;
+				return n[ptr].data; // ê²??ƒ‰?„±ê³?
+			}
+			ptr = n[ptr].next; // ?’¤ìª½ë…¸?“œ?— ì£¼ëª©
+		}
+		return null; // ê²??ƒ‰?‹¤?Œ¨
+	}
+
+	// ë¨¸ë¦¬?— ?…¸?“œë¥? ?‚½?…
+	public void addFirst(E o) {
+		boolean empty = (tail == NULL);
+		int ptr = head; // ?‚½?… ? „?˜ ë¨¸ë¦¬?…¸?“œ
+		int rec = getInsertIndex();
+		if (rec != NULL) {
+			head = crnt = rec; // ?¸?±?Š¤ rec?¸ record?— ?‚½?…
+			n[head].set(o, ptr);
+			if (empty)
+				tail = crnt;
+		}
+	}
+
+	// ê¼¬ë¦¬?— ?…¸?“œë¥? ?‚½?…
+	public void addLast(E o) {
+		if (head == NULL) // ë¦¬ìŠ¤?Š¸ê°? ë¹„ì–´?ˆ?œ¼ë©?
+			addFirst(o); // ë¨¸ë¦¬?— ?‚½?…
+		else {
+			int rec = getInsertIndex();
+			if (rec != NULL) {
+				n[tail].next = crnt = rec;
+				n[rec].set(o, NULL);
+				tail = rec;
+			}
+		}
+	}
+
+	// ë¨¸ë¦¬?…¸?“œë¥? ?‚­? œ
+	public void removeFirst() {
+		if (head != NULL) { // ë¦¬ìŠ¤?Š¸ê°? ë¹„ì–´ ?ˆì§? ?•Š?œ¼ë©?
+			int ptr = n[head].next;
+			deleteIndex(head);
+			head = crnt = ptr;
+			if (head == NULL)
+				tail = NULL;
+		}
+	}
+
+	// ê¼¬ë¦¬?…¸?“œë¥? ?‚­? œ
+	public void removeLast() {
+		if (head != NULL) {
+			if (n[head].next == NULL) // ?…¸?“œê°? ?•˜?‚˜ë§? ?ˆ?œ¼ë©?
+				removeFirst(); // ë¨¸ë¦¬?…¸?“œë¥? ?‚­? œ
+			else {
+				int ptr = head; // ?Š¤ìº”ì¤‘?¸ ?…¸?“œ
+				int pre = head; // ?Š¤ìº”ì¤‘?¸ ?…¸?“œ?˜ ?•ìª½ë…¸?“œ
+
+				while (n[ptr].next != NULL) {
+					pre = ptr;
+					ptr = n[ptr].next;
+				}
+				n[pre].next = NULL; // pre?Š” ?‚­? œ ?’¤?˜ ê¼¬ë¦¬?…¸?“œ
+				deleteIndex(ptr);
+				tail = crnt = pre;
+			}
+		}
+	}
+
+	// record pë¥? ?‚­? œ
+	public void remove(int p) {
+		if (head != NULL) {
+			if (p == head) // pê°? ë¨¸ë¦¬?…¸?“œë©?
+				removeFirst(); // ë¨¸ë¦¬?…¸?“œë¥? ?‚­? œ
+			else if (p == tail) // pê°? ê¼¬ë¦¬?…¸?“œë©?
+				removeLast(); // ê¼¬ë¦¬?…¸?“œë¥? ?‚­? œ
+			else {
+				int ptr = head;
+
+				while (n[ptr].next != p) {
+					ptr = n[ptr].next;
+					if (ptr == NULL)
+						return; // pê°? ë¦¬ìŠ¤?Š¸?— ?—†?Šµ?‹ˆ?‹¤.
+				}
+				n[ptr].next = n[p].next;
+				deleteIndex(p);
+				crnt = ptr;
+			}
+		}
+	}
+
+	// ?„ ?ƒ ?…¸?“œë¥? ?‚­? œ
+	public void removeCurrentNode() {
+		remove(crnt);
+	}
+
+	// ëª¨ë“  ?…¸?“œë¥? ?‚­? œ
+	public void clear() {
+		while (head != NULL) // ë¹„ê²Œ ?  ?•Œê¹Œì?
+			removeFirst(); // ë¨¸ë¦¬?…¸?“œë¥? ?‚­? œ
+		crnt = NULL;
+	}
+
+	// ?„ ?ƒ ?…¸?“œë¥? ?•˜?‚˜ ?’¤ìª½ìœ¼ë¡? ì§„í–‰
+	public boolean next() {
+		if (crnt == NULL || n[crnt].next == NULL)
+			return false; // ?‚˜?•„ê°? ?ˆ˜ ?—†?Œ
+		crnt = n[crnt].next;
+		return true;
+	}
+
+	// ?„ ?ƒ ?…¸?“œë¥? ì¶œë ¥
+	public void printCurrentNode() {
+		if (crnt == NULL)
+			System.out.println("?„ ?ƒ ?…¸?“œê°? ?—†?Šµ?‹ˆ?‹¤.");
+		else
+			System.out.println(n[crnt].data.toString());
+	}
+
+	// ëª¨ë“  ?…¸?“œë¥? ì¶œë ¥
+	public void dump() {
+		int ptr = head;
+
+		while (ptr != NULL) {
+			System.out.println(n[ptr].data.toString());
+			ptr = n[ptr].next;
+		}
+	}
+	
+	// ------------------------------ ?—°?Šµ9-4 ------------------------------//
+	// comparator c?— ?˜?•´ ?„œë¡? ê°™ë‹¤ê³? ë³´ëŠ” ?…¸?“œë¥? ëª¨ë‘ ?‚­? œ
+	public void purge(Comparator<? super E> c) {
+		int ptr = head;
+
+		while (ptr != NULL) {
+			int count = 0;
+			int ptr2 = ptr;
+			int pre = ptr;
+
+			while (n[pre].next != NULL) {
+				ptr2 = n[pre].next;
+				if (c.compare(n[ptr].data, n[ptr2].data) == 0) {
+					remove(ptr2);
+					count++;
+				} else
+					pre = ptr2;
+			}
+			if (count == 0)
+				ptr = n[ptr].next;
+			else {
+				int temp = n[ptr].next;
+				remove(ptr);
+				ptr = temp;
+			}
+		}
+		crnt = head;
+	}
+	// ------------------------------ ?—°?Šµ9-4 ------------------------------//
+}

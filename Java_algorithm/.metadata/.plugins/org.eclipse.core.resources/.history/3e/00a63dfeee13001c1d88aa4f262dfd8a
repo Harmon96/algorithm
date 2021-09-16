@@ -1,0 +1,25 @@
+package chap01_;
+
+import java.util.Scanner;
+
+public class practice_Q11 {
+// 양의 정수를 입력하고 자릿수를 출력하는 프로그램을 작성하세요.
+	
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		int num = sc.nextInt();
+		int check = 0, j = 0;
+
+		while(j <= 10) {
+			num = num / 10;
+			System.out.print("check값 : " + check + "\t");
+			if ( num == 0 ) break;
+			check++;
+			j++;
+		}
+		
+		System.out.println("그 수는 " + check + "자리입니다.");
+		
+	}
+
+}
